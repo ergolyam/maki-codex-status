@@ -1,42 +1,9 @@
-local BOTTOM_STATUSLINE = true
 local URL = "https://chatgpt.com/backend-api/wham/usage"
 local INTERVAL_MS = 180000
-local current = " Codex: -- "
-local buf, win
-
-local function display()
-  if BOTTOM_STATUSLINE then
-    if buf then buf:set_lines({ { { current, "dim" } } }) end
-  else
-    maki.ui.set_status_hint({ { current, "dim" } })
-  end
-end
-
 local function publish(message)
-  current = " Codex: " .. tostring(message):sub(1, 14)
-  display()
+  local current = " Codex: " .. tostring(message):sub(1, 14) .. " "
+  maki.ui.set_status_hint({ { current, "dim" } })
 end
-
-local function reopen(session_id)
-  if not BOTTOM_STATUSLINE then return end
-  if win then win:close() end
-  buf = maki.ui.buf({ scratch = true })
-  buf:line({ { current, "dim" } })
-  win = maki.ui.open_win(buf, {
-    session = session_id,
-    anchor = "SW", row = 0, col = 13,
-    width = 24, height = 1,
-    border = "none", focus = false,
-  })
-end
-
-maki.api.create_autocmd("SessionFocusChanged", {
-  callback = function(ev)
-    if BOTTOM_STATUSLINE then
-      maki.async.spawn(function() reopen(ev.data.session_id) end)
-    end
-  end,
-})
 
 local function weekly_left()
   local state = maki.env.state_dir()
@@ -80,8 +47,9 @@ local function weekly_left()
   return nil, "No weekly window"
 end
 
+publish("--")
+
 maki.async.spawn(function()
-  if BOTTOM_STATUSLINE then reopen() end
   while true do
     local ok, left, err = pcall(weekly_left)
     if ok and left ~= nil then

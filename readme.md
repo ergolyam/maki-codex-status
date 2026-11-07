@@ -1,6 +1,6 @@
 # maki-codex-status
 
-A Lua plugin for [Maki](https://github.com/tontinton/maki) that displays the OpenAI Codex usage status in the bottom panel.
+A Lua plugin for [Maki](https://github.com/tontinton/maki) that displays the remaining weekly OpenAI Codex usage as a Maki status hint.
 
 ### Install
 
