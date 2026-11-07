@@ -1,0 +1,4 @@
+[permissions]
+fs_read = true
+net = true
+net_hosts = ["chatgpt.com"]
