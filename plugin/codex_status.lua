@@ -1,7 +1,7 @@
 local URL = "https://chatgpt.com/backend-api/wham/usage"
 local INTERVAL_MS = 180000
 local function publish(message)
-  local current = " Codex: " .. tostring(message):sub(1, 14) .. " "
+  local current = " " .. tostring(message):sub(1, 21) .. " "
   maki.ui.set_status_hint({ { current, "dim" } })
 end
 
@@ -36,15 +36,17 @@ local function weekly_left()
     return nil, "No limits: " .. tostring(decode_err)
   end
 
+  local limits = {}
+  local labels = { [5 * 3600] = "5h", [7 * 24 * 3600] = "Week" }
   for _, key in ipairs({ "secondary_window", "primary_window" }) do
     local w = data.rate_limit[key]
-    if type(w) == "table"
-       and tonumber(w.limit_window_seconds) == 7 * 24 * 3600
-       and type(w.used_percent) == "number" then
-      return math.floor(math.max(0, math.min(100, 100 - w.used_percent)) + 0.5)
+    local label = type(w) == "table" and labels[tonumber(w.limit_window_seconds)]
+    if label and type(w.used_percent) == "number" then
+      limits[#limits + 1] = label .. ": " .. math.floor(math.max(0, math.min(100, 100 - w.used_percent)) + 0.5) .. "%"
     end
   end
-  return nil, "No weekly window"
+  if #limits > 0 then return table.concat(limits, " | ") end
+  return nil, "No usage windows"
 end
 
 publish("--")
@@ -53,7 +55,7 @@ maki.async.spawn(function()
   while true do
     local ok, left, err = pcall(weekly_left)
     if ok and left ~= nil then
-      publish(left .. "% left")
+      publish(left)
     else
       publish(ok and tostring(err) or ("Lua error: " .. tostring(left)))
     end
